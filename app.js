@@ -41,10 +41,12 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect('mongodb://localhost:27017/bloggingDB', {
-  useNewUrlParser: true
+const uri = process.env.ATLAS_URI;
+mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true });
+const connection = mongoose.connection;
+connection.once('open', () => {
+  console.log('MongoDB connected');
 });
-mongoose.set('useCreateIndex', true);
 
 const userSchema = new mongoose.Schema({
   email: String,
@@ -81,7 +83,8 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRETS,
-      callbackURL: 'http://localhost:3000/auth/google/blogsecret',
+      callbackURL:
+        'https://damp-brook-55922.herokuapp.com/auth/google/blogsecret',
       userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo'
     },
     function(accessToken, refreshToken, profile, cb) {
@@ -283,6 +286,11 @@ app.post('/login', function(req, res) {
   });
 });
 
-app.listen(3000, function() {
-  console.log('Server started on port 3000');
+let port = process.env.PORT;
+if (port == null || port == '') {
+  port = 3000;
+}
+
+app.listen(port, function() {
+  console.log('Server started');
 });
